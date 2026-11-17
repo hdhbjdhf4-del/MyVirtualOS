@@ -56,10 +56,41 @@ public class MainActivity extends Activity {
         TextView h=text(title,16,Color.WHITE,true);TextView d=text(detail,13,muted,false);d.setPadding(0,dp(7),0,0);c.addView(h);c.addView(d);
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.bottomMargin=dp(12);body.addView(c,lp);}
     private void button(String label,Runnable action){TextView b=text(label,14,Color.WHITE,true);b.setGravity(Gravity.CENTER);b.setPadding(dp(14),dp(15),dp(14),dp(15));b.setBackground(shape(accent,14));b.setOnClickListener(v->action.run());LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.bottomMargin=dp(10);body.addView(b,lp);}
+    private String readText(String path) {
+        try {
+            java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader(path));
+            String s = r.readLine(); r.close(); return s == null ? "unknown" : s.trim();
+        } catch (Exception e) { return "Not readable (" + e.getClass().getSimpleName() + ")"; }
+    }
+    private void compatibilityCheck() {
+        android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+        ((android.app.ActivityManager)getSystemService(ACTIVITY_SERVICE)).getMemoryInfo(mi);
+        StringBuilder abis = new StringBuilder();
+        for (String abi : android.os.Build.SUPPORTED_ABIS) { if (abis.length() > 0) abis.append(", "); abis.append(abi); }
+        boolean avfFeature = getPackageManager().hasSystemFeature("android.software.virtualization_framework");
+        boolean vmClass = false;
+        try { Class.forName("android.system.virtualmachine.VirtualMachineManager"); vmClass = true; } catch (Throwable ignored) {}
+        String ns = readText("/proc/sys/user/max_user_namespaces");
+        StringBuilder report = new StringBuilder();
+        report.append("Android: ").append(android.os.Build.VERSION.RELEASE).append(" (API ").append(android.os.Build.VERSION.SDK_INT).append(")\\n");
+        report.append("Device: ").append(android.os.Build.MANUFACTURER).append(" ").append(android.os.Build.MODEL).append("\\n");
+        report.append("CPU ABI: ").append(abis).append("\\n");
+        report.append("Architecture: ").append(System.getProperty("os.arch", "unknown")).append("\\n");
+        report.append("Available RAM: ").append(mi.availMem / (1024 * 1024)).append(" MB of ").append(mi.totalMem / (1024 * 1024)).append(" MB\\n");
+        report.append("Kernel: ").append(readText("/proc/version")).append("\\n\\n");
+        report.append("AVF system feature: ").append(avfFeature ? "PRESENT" : "NOT REPORTED").append("\\n");
+        report.append("VirtualMachineManager API class: ").append(vmClass ? "PRESENT" : "NOT EXPOSED").append("\\n");
+        report.append("User namespace limit: ").append(ns).append("\\n\\n");
+        report.append("RESULT: ");
+        if (avfFeature && vmClass) report.append("Virtualization framework indicators detected. This does not prove a third-party app can start a full Android guest; access permissions and guest image support still need testing.");
+        else report.append("No public AVF support was detected by this app. A rootless container/VM engine is not confirmed. This diagnostic does not attempt to root the phone or change system settings.");
+        report.append("\\n\\nNote: These are read-only checks. APK import and guest Android boot are not implemented in this diagnostic build.");
+        new AlertDialog.Builder(this).setTitle("Device compatibility report").setMessage(report.toString()).setPositiveButton("OK",null).show();
+    }
     private void home(){heading("Your workspace","A cleaner control center for Android environments.");
         card("DEVICE MANAGER","Manage launchable apps and local instance profiles from one place.");
         card("VM ENGINE","Not installed • This build does not boot a separate Android guest yet.");
-        button("Manage instances",()->show("Instances"));button("Browse installed apps",()->show("Apps"));
+        button("Check device compatibility",()->compatibilityCheck());button("Manage instances",()->show("Instances"));button("Browse installed apps",()->show("Apps"));
         card("CURRENT BUILD","MyVirtualOS Lite 2.0 • Offline-first interface • No account required");
     }
     private void apps(){heading("Apps","Launch apps already installed on this Android phone.");
@@ -84,7 +115,7 @@ public class MainActivity extends Activity {
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.bottomMargin=dp(8);body.addView(row,lp);}
         button("Check VM engine status",()->new AlertDialog.Builder(this).setTitle("VM engine unavailable").setMessage("This app currently manages local profiles only. A compatible Android virtualization backend and supported device are required before a guest Android system can boot.").setPositiveButton("OK",null).show());
     }
-    private void settings(){heading("Settings","App preferences and diagnostics.");
+    private void settings(){heading("Settings","App preferences and diagnostics.");\n        button("Run compatibility check",()->compatibilityCheck());
         card("VERSION","MyVirtualOS Lite 2.0");
         card("PRIVACY","Profiles are stored locally on this device. This app does not upload your app list.");
         button("Import APK file",()->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("application/vnd.android.package-archive");i.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(i,PICK_APK);});
