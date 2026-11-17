@@ -72,19 +72,21 @@ public class MainActivity extends Activity {
         try { Class.forName("android.system.virtualmachine.VirtualMachineManager"); vmClass = true; } catch (Throwable ignored) {}
         String ns = readText("/proc/sys/user/max_user_namespaces");
         StringBuilder report = new StringBuilder();
-        report.append("Android: ").append(android.os.Build.VERSION.RELEASE).append(" (API ").append(android.os.Build.VERSION.SDK_INT).append(")\\n");
-        report.append("Device: ").append(android.os.Build.MANUFACTURER).append(" ").append(android.os.Build.MODEL).append("\\n");
-        report.append("CPU ABI: ").append(abis).append("\\n");
-        report.append("Architecture: ").append(System.getProperty("os.arch", "unknown")).append("\\n");
-        report.append("Available RAM: ").append(mi.availMem / (1024 * 1024)).append(" MB of ").append(mi.totalMem / (1024 * 1024)).append(" MB\\n");
-        report.append("Kernel: ").append(readText("/proc/version")).append("\\n\\n");
-        report.append("AVF system feature: ").append(avfFeature ? "PRESENT" : "NOT REPORTED").append("\\n");
-        report.append("VirtualMachineManager API class: ").append(vmClass ? "PRESENT" : "NOT EXPOSED").append("\\n");
-        report.append("User namespace limit: ").append(ns).append("\\n\\n");
+        report.append("Android: ").append(android.os.Build.VERSION.RELEASE).append(" (API ").append(android.os.Build.VERSION.SDK_INT).append(")\n");
+        report.append("Device: ").append(android.os.Build.MANUFACTURER).append(" ").append(android.os.Build.MODEL).append("\n");
+        report.append("CPU ABI: ").append(abis).append("\n");
+        report.append("Architecture: ").append(System.getProperty("os.arch", "unknown")).append("\n");
+        report.append("Available RAM: ").append(mi.availMem / (1024 * 1024)).append(" MB of ").append(mi.totalMem / (1024 * 1024)).append(" MB\n");
+        report.append("Kernel: ").append(readText("/proc/version")).append("\n\n");
+        report.append("AVF system feature: ").append(avfFeature ? "PRESENT" : "NOT REPORTED").append("\n");
+        report.append("VirtualMachineManager API class: ").append(vmClass ? "PRESENT" : "NOT EXPOSED").append("\n");
+        int vmPermission = checkSelfPermission("android.permission.MANAGE_VIRTUAL_MACHINE");
+        report.append("MANAGE_VIRTUAL_MACHINE permission: ").append(vmPermission == PackageManager.PERMISSION_GRANTED ? "GRANTED" : "NOT GRANTED").append("\n");
+        report.append("User namespace limit: ").append(ns).append("\n\n");
         report.append("RESULT: ");
         if (avfFeature && vmClass) report.append("Virtualization framework indicators detected. This does not prove a third-party app can start a full Android guest; access permissions and guest image support still need testing.");
         else report.append("No public AVF support was detected by this app. A rootless container/VM engine is not confirmed. This diagnostic does not attempt to root the phone or change system settings.");
-        report.append("\\n\\nNote: These are read-only checks. APK import and guest Android boot are not implemented in this diagnostic build.");
+        report.append("\n\nNote: These are read-only checks. APK import and guest Android boot are not implemented in this diagnostic build.");
         new AlertDialog.Builder(this).setTitle("Device compatibility report").setMessage(report.toString()).setPositiveButton("OK",null).show();
     }
     private void home(){heading("Your workspace","A cleaner control center for Android environments.");
