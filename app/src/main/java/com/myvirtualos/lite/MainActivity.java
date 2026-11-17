@@ -115,7 +115,8 @@ public class MainActivity extends Activity {
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.bottomMargin=dp(8);body.addView(row,lp);}
         button("Check VM engine status",()->new AlertDialog.Builder(this).setTitle("VM engine unavailable").setMessage("This app currently manages local profiles only. A compatible Android virtualization backend and supported device are required before a guest Android system can boot.").setPositiveButton("OK",null).show());
     }
-    private void settings(){heading("Settings","App preferences and diagnostics.");\n        button("Run compatibility check",()->compatibilityCheck());
+    private void settings(){heading("Settings","App preferences and diagnostics.");
+        button("Run compatibility check",()->compatibilityCheck());
         card("VERSION","MyVirtualOS Lite 2.0");
         card("PRIVACY","Profiles are stored locally on this device. This app does not upload your app list.");
         button("Import APK file",()->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("application/vnd.android.package-archive");i.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(i,PICK_APK);});
